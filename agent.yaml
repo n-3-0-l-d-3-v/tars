@@ -1,0 +1,32 @@
+name: TARS
+role: code-build-test-scaffolding
+default_sensitivity_tier: work
+entrypoint: tars
+health_check_command: tars --health
+sandboxed: false
+
+# --- notes for the ecosystem -------------------------------------------
+#
+# `default_sensitivity_tier: work` (not `private`, unlike Jarvis/Ultron/
+# Wall-E's fail-closed default) per 10x/docs/agents/tars.md: "`work`
+# unless the target repo is explicitly private/personal." TARS v1 does not
+# auto-detect a private/personal target repo -- see README.md "Sensitivity
+# tier" for why that's a deliberate v1 gap, not an oversight.
+#
+# `tars --health` (this file's health_check_command) is a top-level eager
+# flag, matching the pattern every sibling agent already uses (Friday's
+# `friday --health`, Ultron's `ultron --health`, Jarvis's `jarvis --health`,
+# Wall-E's `wall-e --health`) -- see tars/cli.py and README.md.
+#
+# `sandboxed: false` because TARS gets real shell/git access on this
+# machine (per 10x/docs/agents/tars.md: "Shell access scoped to project
+# directories under an allowed-roots list -- never arbitrary filesystem
+# access"). The scoping is TARS's own allowed-roots boundary
+# (tars/safety.py, TARS_ALLOWED_ROOTS env var), not an OS-level sandbox --
+# `sandboxed: false` accurately reports that, the same way Jarvis/Wall-E
+# report it despite their own non-network safety measures.
+#
+# TARS deliberately has no `tars push` command -- pushing/publishing is a
+# user-confirmed action across this whole ecosystem (see every sibling's
+# own agent.yaml notes and 10x's own conventions), not something an agent
+# does autonomously. See README.md "Why there's no `tars push`".

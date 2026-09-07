@@ -1,0 +1,15 @@
+{
+  "name": "__TARS_PROJECT_NAME__",
+  "version": "0.1.0",
+  "description": "A Node CLI app, scaffolded by TARS.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "__TARS_PROJECT_NAME__": "src/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build": "node --check src/index.js"
+  },
+  "license": "UNLICENSED"
+}

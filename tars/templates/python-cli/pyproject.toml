@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "__TARS_PROJECT_NAME__"
+version = "0.1.0"
+description = "A Python CLI app, scaffolded by TARS."
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+__TARS_PROJECT_NAME__ = "__TARS_PACKAGE_NAME__.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

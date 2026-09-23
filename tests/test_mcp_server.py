@@ -16,12 +16,12 @@ def _call(server, name, args):
     return result
 
 
-def test_all_five_tools_are_registered():
+def test_all_tools_are_registered():
     from tars import mcp_server
 
     tools = asyncio.run(mcp_server.server.list_tools())
     names = {t.name for t in tools}
-    assert names == {"scaffold", "test", "build", "git_status", "tars_templates"}
+    assert names == {"scaffold", "test", "build", "git_status", "tars_templates", "guard_scan"}
 
 
 def test_tars_templates_tool_lists_shipped_templates():

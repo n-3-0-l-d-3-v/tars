@@ -20,7 +20,9 @@ from mcp.server.mcpserver import MCPServer
 
 from tars.dispatch import DispatchError, run_build, run_test
 from tars.git_ops import GitOpsError, status as git_status_op
-from tars.safety import SafetyError
+from tars.guard import GuardError, scan_repo
+from tars.guard import report as guard_report
+from tars.safety import SafetyError, ensure_within_allowed_roots
 from tars.scaffold import ScaffoldError, list_templates, scaffold_project
 
 server = MCPServer(
@@ -114,6 +116,23 @@ def git_status(path: str = ".") -> str:
     except (GitOpsError, SafetyError) as exc:
         return f"Error: {exc}"
     return result.stdout or "(clean)"
+
+
+@server.tool(
+    description=(
+        "Scan a git repo for secrets (keys, tokens, .env/private-key files). "
+        "Scans staged changes by default; `all_files=true` scans every "
+        "tracked file. Read-only: reports findings (path:line + rule), never "
+        "prints the secret itself."
+    )
+)
+def guard_scan(path: str = ".", all_files: bool = False) -> str:
+    try:
+        resolved = ensure_within_allowed_roots(Path(path))
+        findings = scan_repo(resolved, staged=not all_files)
+    except (GuardError, SafetyError) as exc:
+        return f"Error: {exc}"
+    return guard_report(findings) if findings else "No secrets found."
 
 
 @server.tool(

@@ -65,7 +65,16 @@ written fresh here.
 7. **CLI** (`tars/cli.py`, `click`-based, matching every sibling agent's
    CLI framework choice): `tars new`, `tars templates`, `tars test`,
    `tars build`, `tars branch`, `tars commit`, `tars status`, `tars
-   --health`.
+   --health`, `tars guard`.
+8. **Secret guard** (`tars/guard.py`) -- `tars guard install` writes a
+   git pre-commit hook that scans the *staged index* (exactly what will be
+   committed) and blocks `.env`/private-key/keystore files plus known
+   token shapes (AWS, GitHub, Slack, Google, OpenAI, Anthropic, Groq,
+   Hugging Face, Stripe, PEM private keys) and random-looking
+   `api_key = "..."` assignments. Reports `path:line: rule`, never the
+   secret. False positives: `tars:allow` on the line, or globs in a
+   `.tars-guard-allow` file. The hook fails closed if TARS is missing.
+   `tars guard scan [--all]` runs the same check by hand; MCP `guard_scan`.
 
 ## Why there's no `tars push`
 
@@ -122,6 +131,11 @@ tars build --path C:\Users\me\Desktop\Neil\my-cli-tool
 tars branch feature/x --path C:\Users\me\Desktop\Neil\my-cli-tool
 tars commit -m "message" --path C:\Users\me\Desktop\Neil\my-cli-tool
 tars status --path C:\Users\me\Desktop\Neil\my-cli-tool
+
+# Secret guard: install the pre-commit hook, scan by hand, remove it
+tars guard install --path C:\Users\me\Desktop\Neil\my-cli-tool
+tars guard scan --all --path C:\Users\me\Desktop\Neil\my-cli-tool
+tars guard uninstall --path C:\Users\me\Desktop\Neil\my-cli-tool
 
 # TARS's own status (ecosystem agent.yaml contract's health_check_command)
 tars --health

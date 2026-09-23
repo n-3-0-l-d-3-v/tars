@@ -23,6 +23,8 @@ if hasattr(sys.stderr, "reconfigure"):
 from tars import __version__
 from tars.dispatch import DispatchError, run_build, run_test
 from tars.git_ops import GitOpsError, commit_all, create_branch, status
+from tars.guard import GuardError, install_hook, scan_repo, uninstall_hook
+from tars.guard import report as guard_report
 from tars.safety import SafetyError, default_allowed_roots
 from tars.scaffold import ScaffoldError, list_templates, scaffold_project
 
@@ -169,6 +171,54 @@ def status_cmd(path_raw: str) -> None:
         click.echo(f"Error: {exc}", err=True)
         sys.exit(1)
     click.echo(result.stdout or "(clean)")
+
+
+@cli.group(name="guard")
+def guard_group() -> None:
+    """Pre-commit secret guard: install/uninstall the hook, or scan now."""
+
+
+@guard_group.command(name="install")
+@click.option("--path", "path_raw", default=".", help="Repo directory (default: cwd).")
+@click.option("--force", is_flag=True, default=False,
+              help="Replace an existing non-TARS pre-commit hook (kept as pre-commit.bak).")
+def guard_install_cmd(path_raw: str, force: bool) -> None:
+    """Install the secret-blocking pre-commit hook into a repo."""
+    try:
+        hook = install_hook(Path(path_raw), force=force)
+    except (GuardError, SafetyError) as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    click.echo(f"Installed tars-guard pre-commit hook: {hook}")
+
+
+@guard_group.command(name="uninstall")
+@click.option("--path", "path_raw", default=".", help="Repo directory (default: cwd).")
+def guard_uninstall_cmd(path_raw: str) -> None:
+    """Remove TARS's pre-commit hook (restores a backed-up hook if any)."""
+    try:
+        removed = uninstall_hook(Path(path_raw))
+    except (GuardError, SafetyError) as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    click.echo("Removed tars-guard hook." if removed else "No tars-guard hook installed.")
+
+
+@guard_group.command(name="scan")
+@click.option("--path", "path_raw", default=".", help="Repo directory (default: cwd).")
+@click.option("--all", "all_files", is_flag=True, default=False,
+              help="Scan every tracked file instead of only staged changes.")
+def guard_scan_cmd(path_raw: str, all_files: bool) -> None:
+    """Scan staged changes (or all tracked files) for secrets. Exit 1 on findings."""
+    try:
+        findings = scan_repo(Path(path_raw), staged=not all_files)
+    except GuardError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+    if findings:
+        click.echo(guard_report(findings), err=True)
+        sys.exit(1)
+    click.echo("tars-guard: no secrets found.")
 
 
 def main() -> None:
